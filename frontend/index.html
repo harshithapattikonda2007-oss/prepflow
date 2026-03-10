@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PrepFlow — Your Placement Journey</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0a0a0f; --surface: #12121a; --surface2: #1a1a26;
+    --border: rgba(255,255,255,0.07); --accent: #7c3aed; --accent2: #06b6d4;
+    --accent3: #f59e0b; --neon: #a78bfa; --green: #10b981; --red: #ef4444;
+    --text: #f0eeff; --muted: rgba(240,238,255,0.45);
+    --card-glow: 0 0 40px rgba(124,58,237,0.12);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; overflow-x:hidden; }
+  body::before { content:''; position:fixed; inset:0; z-index:0; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E"); pointer-events:none; }
+
+  .page { display:none; position:relative; z-index:1; }
+  .page.active { display:flex; }
+
+  .auth-page {
+    min-height:100vh; align-items:center; justify-content:center; flex-direction:column;
+    background:radial-gradient(ellipse 80% 60% at 50% -20%,rgba(124,58,237,0.3) 0%,transparent 70%),
+               radial-gradient(ellipse 60% 40% at 80% 80%,rgba(6,182,212,0.15) 0%,transparent 60%),var(--bg);
+  }
+  .auth-logo { font-family:'Syne',sans-serif; font-size:2rem; font-weight:800; letter-spacing:-0.04em; margin-bottom:2.5rem; background:linear-gradient(135deg,var(--neon) 0%,var(--accent2) 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+  .auth-card { background:var(--surface); border:1px solid var(--border); border-radius:24px; padding:2.5rem 2.8rem; width:420px; max-width:95vw; box-shadow:var(--card-glow),0 24px 80px rgba(0,0,0,0.5); animation:slideUp 0.6s cubic-bezier(.16,1,.3,1) both; }
+  @keyframes slideUp { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
+  .auth-card h2 { font-family:'Syne',sans-serif; font-size:1.6rem; font-weight:700; margin-bottom:0.4rem; }
+  .auth-card p.sub { color:var(--muted); font-size:0.9rem; margin-bottom:2rem; }
+
+  .form-group { margin-bottom:1.2rem; }
+  .form-group label { display:block; font-size:0.8rem; font-weight:500; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:0.5rem; }
+  .form-group input { width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:12px; padding:0.8rem 1rem; color:var(--text); font-family:'DM Sans',sans-serif; font-size:0.95rem; outline:none; transition:border-color 0.2s,box-shadow 0.2s; }
+  .form-group input:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(124,58,237,0.2); }
+  .form-group input::placeholder { color:rgba(240,238,255,0.2); }
+
+  .auth-error { background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:10px; color:var(--red); font-size:0.85rem; padding:0.7rem 1rem; margin-bottom:0.8rem; display:none; }
+  .auth-error.show { display:block; }
+
+  .btn-primary { width:100%; padding:0.9rem; background:linear-gradient(135deg,var(--accent) 0%,#5b21b6 100%); border:none; border-radius:12px; color:#fff; font-family:'Syne',sans-serif; font-size:1rem; font-weight:600; cursor:pointer; transition:transform 0.15s,box-shadow 0.2s; margin-top:0.5rem; position:relative; overflow:hidden; }
+  .btn-primary::after { content:''; position:absolute; inset:0; background:linear-gradient(135deg,rgba(255,255,255,0.15) 0%,transparent 60%); }
+  .btn-primary:hover { transform:translateY(-2px); box-shadow:0 8px 30px rgba(124,58,237,0.5); }
+  .btn-primary:active { transform:translateY(0); }
+  .btn-primary:disabled { opacity:0.6; cursor:not-allowed; transform:none !important; }
+
+  .auth-switch { text-align:center; margin-top:1.5rem; color:var(--muted); font-size:0.9rem; }
+  .auth-switch a { color:var(--neon); text-decoration:none; font-weight:500; cursor:pointer; }
+  .auth-switch a:hover { text-decoration:underline; }
+
+  /* Server status pill */
+  .server-status { display:inline-flex; align-items:center; gap:6px; font-size:0.75rem; padding:0.3rem 0.8rem; border-radius:99px; border:1px solid var(--border); background:var(--surface2); color:var(--muted); margin-bottom:1.5rem; }
+  .server-dot { width:7px; height:7px; border-radius:50%; background:var(--accent3); }
+  .server-dot.up { background:var(--green); box-shadow:0 0 6px var(--green); animation:pulse 2s infinite; }
+  .server-dot.down { background:var(--red); }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+  .app-page { min-height:100vh; flex-direction:row; }
+  .sidebar { width:260px; min-height:100vh; background:var(--surface); border-right:1px solid var(--border); display:flex; flex-direction:column; padding:1.5rem 1rem; position:sticky; top:0; height:100vh; overflow-y:auto; flex-shrink:0; }
+  .sidebar-logo { font-family:'Syne',sans-serif; font-size:1.4rem; font-weight:800; background:linear-gradient(135deg,var(--neon),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; padding:0.5rem 0.75rem; margin-bottom:0.5rem; }
+  .sidebar-user { display:flex; align-items:center; gap:0.75rem; background:var(--surface2); border:1px solid var(--border); border-radius:14px; padding:0.75rem; margin-bottom:1.5rem; }
+  .avatar { width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg,var(--accent),var(--accent2)); display:flex; align-items:center; justify-content:center; font-family:'Syne',sans-serif; font-weight:700; font-size:1rem; flex-shrink:0; }
+  .sidebar-user-info .name { font-weight:600; font-size:0.9rem; }
+  .sidebar-user-info .role { font-size:0.75rem; color:var(--muted); }
+  .nav-section-label { font-size:0.7rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--muted); padding:0 0.75rem; margin-bottom:0.4rem; margin-top:1rem; }
+  .nav-item { display:flex; align-items:center; gap:0.75rem; padding:0.7rem 0.75rem; border-radius:10px; cursor:pointer; transition:background 0.15s,color 0.15s; font-size:0.92rem; font-weight:500; color:var(--muted); margin-bottom:2px; }
+  .nav-item:hover { background:var(--surface2); color:var(--text); }
+  .nav-item.active { background:rgba(124,58,237,0.15); color:var(--neon); }
+  .nav-item .icon { font-size:1.1rem; width:20px; text-align:center; }
+  .sidebar-bottom { margin-top:auto; }
+  .btn-logout { width:100%; padding:0.7rem; background:transparent; border:1px solid var(--border); border-radius:10px; color:var(--muted); font-family:'DM Sans',sans-serif; font-size:0.9rem; cursor:pointer; transition:all 0.2s; }
+  .btn-logout:hover { border-color:var(--red); color:var(--red); }
+
+  .main-content { flex:1; overflow-y:auto; padding:2rem 2.5rem; }
+  .section { display:none; }
+  .section.active { display:block; animation:fadeIn 0.4s ease; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+
+  .page-header { margin-bottom:2rem; }
+  .page-header h1 { font-family:'Syne',sans-serif; font-size:1.8rem; font-weight:800; letter-spacing:-0.02em; line-height:1.2; }
+  .page-header p { color:var(--muted); margin-top:0.3rem; font-size:0.95rem; }
+
+  .grid-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:1.2rem; margin-bottom:1.5rem; }
+  .grid-2 { display:grid; grid-template-columns:repeat(2,1fr); gap:1.2rem; margin-bottom:1.5rem; }
+
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:1.5rem; position:relative; overflow:hidden; transition:transform 0.2s,box-shadow 0.2s; }
+  .card:hover { transform:translateY(-2px); box-shadow:var(--card-glow); }
+  .card-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--muted); margin-bottom:0.6rem; }
+  .card-value { font-family:'Syne',sans-serif; font-size:2.2rem; font-weight:800; line-height:1; }
+  .card-sub { font-size:0.82rem; color:var(--muted); margin-top:0.3rem; }
+  .card-accent-bar { position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,var(--accent),var(--accent2)); }
+
+  .goal-item { display:flex; align-items:center; gap:0.85rem; background:var(--surface2); border:1px solid var(--border); border-radius:12px; padding:0.9rem 1.1rem; margin-bottom:0.6rem; cursor:pointer; transition:all 0.2s; user-select:none; }
+  .goal-item:hover { border-color:var(--accent); }
+  .goal-item.completed { opacity:0.6; }
+  .goal-item.completed .goal-text { text-decoration:line-through; color:var(--muted); }
+  .goal-check { width:22px; height:22px; border-radius:50%; border:2px solid var(--border); display:flex; align-items:center; justify-content:center; transition:all 0.2s; flex-shrink:0; font-size:0.75rem; }
+  .goal-item.completed .goal-check { background:var(--green); border-color:var(--green); color:#fff; }
+  .goal-text { font-size:0.92rem; font-weight:500; transition:all 0.2s; }
+
+  .streak-grid { display:flex; gap:5px; flex-wrap:wrap; margin-top:0.8rem; }
+  .streak-day { width:18px; height:18px; border-radius:4px; background:var(--surface2); border:1px solid var(--border); }
+  .streak-day.done { background:var(--accent); border-color:var(--accent); }
+  .streak-day.today { background:var(--accent2); border-color:var(--accent2); box-shadow:0 0 8px var(--accent2); }
+
+  .readiness-number { font-family:'Syne',sans-serif; font-size:3.5rem; font-weight:800; background:linear-gradient(135deg,var(--neon),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+
+  .skill-row { margin-bottom:1rem; }
+  .skill-label { display:flex; justify-content:space-between; font-size:0.88rem; margin-bottom:0.4rem; }
+  .skill-label span:last-child { color:var(--muted); }
+  .skill-bar { height:6px; background:var(--surface2); border-radius:99px; overflow:hidden; }
+  .skill-fill { height:100%; border-radius:99px; transition:width 1s cubic-bezier(.4,0,.2,1); }
+
+  .test-card { display:flex; align-items:center; gap:1rem; background:var(--surface2); border:1px solid var(--border); border-radius:14px; padding:1rem 1.2rem; margin-bottom:0.8rem; cursor:pointer; transition:all 0.2s; }
+  .test-card:hover { border-color:var(--accent); background:rgba(124,58,237,0.08); }
+  .test-card.test-done { border-color:rgba(16,185,129,0.3); }
+  .test-icon { width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.3rem; flex-shrink:0; }
+  .test-info .t-title { font-weight:600; font-size:0.95rem; }
+  .test-info .t-meta { font-size:0.8rem; color:var(--muted); margin-top:2px; }
+  .test-info .t-score { font-size:0.8rem; color:var(--green); margin-top:3px; font-weight:600; }
+  .badge { margin-left:auto; padding:0.25rem 0.75rem; border-radius:99px; font-size:0.75rem; font-weight:600; }
+  .badge-green { background:rgba(16,185,129,0.15); color:var(--green); }
+  .badge-yellow { background:rgba(245,158,11,0.15); color:var(--accent3); }
+  .badge-purple { background:rgba(124,58,237,0.15); color:var(--neon); }
+
+  .lesson-card { background:var(--surface2); border:1px solid var(--border); border-radius:14px; padding:1.2rem; margin-bottom:0.8rem; cursor:pointer; transition:all 0.2s; position:relative; }
+  .lesson-card:hover { border-color:var(--accent2); }
+  .lesson-card.lesson-done { border-color:rgba(16,185,129,0.3); }
+  .lesson-header { display:flex; align-items:center; gap:0.75rem; margin-bottom:0.5rem; }
+  .lesson-emoji { font-size:1.5rem; }
+  .lesson-title { font-weight:600; font-size:0.95rem; }
+  .lesson-desc { font-size:0.85rem; color:var(--muted); }
+  .progress-mini { height:4px; background:var(--surface); border-radius:99px; margin-top:0.8rem; overflow:hidden; }
+  .progress-mini-fill { height:100%; border-radius:99px; background:linear-gradient(90deg,var(--accent2),var(--accent)); transition:width 0.6s ease; }
+  .lesson-status { position:absolute; top:1rem; right:1rem; font-size:0.75rem; font-weight:600; padding:0.2rem 0.6rem; border-radius:99px; }
+
+  .table-wrap { overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; }
+  thead th { text-align:left; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--muted); padding:0.7rem 1rem; border-bottom:1px solid var(--border); }
+  tbody td { padding:0.85rem 1rem; font-size:0.9rem; border-bottom:1px solid var(--border); }
+  tbody tr:hover { background:var(--surface2); }
+  .status-dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px; }
+  .dot-green { background:var(--green); box-shadow:0 0 6px var(--green); }
+  .dot-yellow { background:var(--accent3); box-shadow:0 0 6px var(--accent3); }
+  .dot-red { background:var(--red); box-shadow:0 0 6px var(--red); }
+
+  .btn-sm { padding:0.35rem 0.9rem; border-radius:8px; border:1px solid var(--border); background:transparent; color:var(--text); font-size:0.8rem; cursor:pointer; transition:all 0.2s; font-family:'DM Sans',sans-serif; }
+  .btn-sm:hover { border-color:var(--accent); color:var(--neon); }
+  .btn-sm.warn { border-color:var(--accent3); color:var(--accent3); }
+  .btn-sm.warn:hover { background:rgba(245,158,11,0.1); }
+
+  .modal-overlay { position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,0.7); backdrop-filter:blur(10px); display:flex; align-items:center; justify-content:center; animation:fadeIn 0.2s ease; }
+  .modal-overlay.hidden { display:none; }
+  .modal { background:var(--surface); border:1px solid var(--border); border-radius:24px; padding:2rem 2.5rem; width:560px; max-width:95vw; max-height:90vh; overflow-y:auto; box-shadow:0 30px 100px rgba(0,0,0,0.6); animation:slideUp 0.4s cubic-bezier(.16,1,.3,1) both; }
+  .modal h3 { font-family:'Syne',sans-serif; font-size:1.4rem; font-weight:700; margin-bottom:0.3rem; }
+  .modal .modal-sub { color:var(--muted); font-size:0.9rem; margin-bottom:1.8rem; }
+
+  .skill-tags { display:flex; flex-wrap:wrap; gap:0.5rem; margin-top:0.5rem; }
+  .skill-tag { padding:0.4rem 0.9rem; border:1px solid var(--border); border-radius:99px; font-size:0.82rem; cursor:pointer; transition:all 0.15s; background:var(--surface2); color:var(--muted); }
+  .skill-tag.selected { background:rgba(124,58,237,0.2); border-color:var(--accent); color:var(--neon); }
+
+  .modal-actions { display:flex; gap:0.8rem; margin-top:1.5rem; }
+  .btn-outline { flex:1; padding:0.8rem; background:transparent; border:1px solid var(--border); border-radius:12px; color:var(--muted); font-family:'DM Sans',sans-serif; font-size:0.9rem; cursor:pointer; transition:all 0.2s; }
+  .btn-outline:hover { border-color:var(--text); color:var(--text); }
+  .btn-modal-primary { flex:2; padding:0.8rem; background:linear-gradient(135deg,var(--accent),#5b21b6); border:none; border-radius:12px; color:#fff; font-family:'Syne',sans-serif; font-size:0.95rem; font-weight:600; cursor:pointer; transition:all 0.2s; }
+  .btn-modal-primary:hover { box-shadow:0 6px 20px rgba(124,58,237,0.4); }
+
+  .quiz-q { font-weight:600; font-size:1rem; margin-bottom:1.2rem; line-height:1.5; }
+  .quiz-option { padding:0.85rem 1rem; border:1px solid var(--border); border-radius:12px; margin-bottom:0.6rem; cursor:pointer; transition:all 0.15s; font-size:0.9rem; background:var(--surface2); }
+  .quiz-option:hover { border-color:var(--accent); color:var(--neon); }
+  .quiz-option.correct { border-color:var(--green); background:rgba(16,185,129,0.1); color:var(--green); }
+  .quiz-option.wrong { border-color:var(--red); background:rgba(239,68,68,0.1); color:var(--red); }
+
+  .toast { position:fixed; bottom:2rem; right:2rem; background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:1rem 1.5rem; z-index:9999; display:flex; align-items:center; gap:0.75rem; box-shadow:0 10px 40px rgba(0,0,0,0.4); animation:slideUp 0.4s ease; max-width:320px; }
+  .toast.hidden { display:none; }
+  .toast-icon { font-size:1.3rem; }
+  .toast-text { font-size:0.9rem; }
+
+  .chart-wrap { position:relative; height:220px; }
+  .notif-banner { background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.3); border-radius:12px; padding:0.75rem 1rem; font-size:0.88rem; margin-bottom:1rem; display:flex; align-items:center; gap:0.6rem; }
+  .admin-kpi-row { display:grid; grid-template-columns:repeat(4,1fr); gap:1rem; margin-bottom:1.5rem; }
+
+  @media(max-width:900px){.grid-3,.admin-kpi-row{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:600px){
+    .sidebar{width:60px}
+    .sidebar-logo,.nav-item span,.sidebar-user-info,.btn-logout{display:none}
+    .nav-item{justify-content:center}
+    .main-content{padding:1.5rem 1rem}
+    .grid-3,.grid-2,.admin-kpi-row{grid-template-columns:1fr}
+  }
+  ::-webkit-scrollbar{width:4px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:rgba(124,58,237,0.4);border-radius:99px}
+
+  .section-title { font-family:'Syne',sans-serif; font-size:1.1rem; font-weight:700; margin-bottom:1rem; margin-top:0.5rem; }
+  .chart-card { padding:1.5rem; }
+  .glow-text { background:linear-gradient(135deg,var(--neon),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+
+  .achievement { text-align:center; padding:1rem; background:var(--surface2); border-radius:14px; min-width:100px; transition:all 0.3s; }
+  .achievement.locked { opacity:0.3; filter:grayscale(1); }
+  .achievement.unlocked { border:1px solid rgba(124,58,237,0.4); box-shadow:0 0 20px rgba(124,58,237,0.1); }
+  .achievement-pop { animation:achievePop 0.5s cubic-bezier(.16,1,.3,1) both; }
+  @keyframes achievePop { from{transform:scale(0.5);opacity:0} to{transform:scale(1);opacity:1} }
+
+  .lesson-content { font-size:0.92rem; line-height:1.7; color:rgba(240,238,255,0.8); }
+  .lesson-content h4 { font-family:'Syne',sans-serif; color:var(--neon); margin:1rem 0 0.5rem; }
+  .lesson-content code { background:var(--surface2); padding:0.15em 0.4em; border-radius:4px; font-size:0.88em; }
+</style>
+</head>
+<body>
+
+<!-- ════ REGISTER ════ -->
+<div id="page-register" class="page auth-page active">
+  <div class="auth-logo">✦ PrepFlow</div>
+  <div class="server-status" id="reg-server-status">
+    <span class="server-dot" id="reg-server-dot"></span>
+    <span id="reg-server-text">Connecting to server...</span>
+  </div>
+  <div class="auth-card">
+    <h2>Start your journey 🚀</h2>
+    <p class="sub">Create your account — it's free forever.</p>
+    <div class="form-group"><label>Username</label><input type="text" id="reg-username" placeholder="e.g. alex_dev"/></div>
+    <div class="form-group"><label>Email</label><input type="email" id="reg-email" placeholder="you@university.edu"/></div>
+    <div class="form-group"><label>Password</label><input type="password" id="reg-pass" placeholder="Create a strong password"/></div>
+    <div class="auth-error" id="reg-error"></div>
+    <button class="btn-primary" id="reg-btn" onclick="register()">Create Account →</button>
+    <p class="auth-switch">Already have an account? <a onclick="show('page-login')">Sign in</a></p>
+    <p class="auth-switch" style="margin-top:0.5rem"><a onclick="showAdmin()">Admin login →</a></p>
+  </div>
+</div>
+
+<!-- ════ LOGIN ════ -->
+<div id="page-login" class="page auth-page">
+  <div class="auth-logo">✦ PrepFlow</div>
+  <div class="server-status" id="login-server-status">
+    <span class="server-dot" id="login-server-dot"></span>
+    <span id="login-server-text">Connecting to server...</span>
+  </div>
+  <div class="auth-card">
+    <h2>Welcome back 👋</h2>
+    <p class="sub">Your streak is waiting for you.</p>
+    <div class="form-group"><label>Username</label><input type="text" id="login-username" placeholder="Your username"/></div>
+    <div class="form-group"><label>Email</label><input type="email" id="login-email" placeholder="your@email.com"/></div>
+    <div class="form-group"><label>Password</label><input type="password" id="login-pass" placeholder="Your password"/></div>
+    <div class="auth-error" id="login-error"></div>
+    <button class="btn-primary" id="login-btn" onclick="login()">Sign In →</button>
+    <p class="auth-switch">New here? <a onclick="show('page-register')">Create account</a></p>
+    <p class="auth-switch" style="margin-top:0.5rem"><a onclick="showAdmin()">Admin login →</a></p>
+  </div>
+</div>
+
+<!-- ════ MAIN APP ════ -->
+<div id="page-app" class="page app-page">
+  <aside class="sidebar">
+    <div class="sidebar-logo">✦ PrepFlow</div>
+    <div class="sidebar-user">
+      <div class="avatar" id="sidebar-avatar">A</div>
+      <div class="sidebar-user-info">
+        <div class="name" id="sidebar-name">User</div>
+        <div class="role">Student</div>
+      </div>
+    </div>
+    <div class="nav-section-label">Navigation</div>
+    <div class="nav-item active" onclick="navTo('dashboard',this)"><span class="icon">📊</span><span>Dashboard</span></div>
+    <div class="nav-item" onclick="navTo('tests',this)"><span class="icon">🧠</span><span>Tests</span></div>
+    <div class="nav-item" onclick="navTo('learn',this)"><span class="icon">📚</span><span>Learn</span></div>
+    <div class="nav-item" onclick="navTo('profile',this)"><span class="icon">👤</span><span>Profile</span></div>
+    <div class="sidebar-bottom">
+      <div class="nav-item" onclick="navTo('settings',this)" style="margin-bottom:0.5rem"><span class="icon">⚙️</span><span>Settings</span></div>
+      <button class="btn-logout" onclick="logout()">Sign out</button>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <!-- DASHBOARD -->
+    <div id="section-dashboard" class="section active">
+      <div class="page-header">
+        <h1>Your Prep Dashboard <span class="glow-text">✦</span></h1>
+        <p>Track your daily grind and stay on top of placements.</p>
+      </div>
+      <div class="grid-3">
+        <div class="card"><div class="card-accent-bar"></div><div class="card-label">🔥 Current Streak</div><div class="card-value" id="streak-count">0</div><div class="card-sub">days in a row</div></div>
+        <div class="card"><div class="card-accent-bar" style="background:linear-gradient(90deg,var(--accent2),var(--green))"></div><div class="card-label">✅ Daily Goals</div><div class="card-value" id="goals-done">0/5</div><div class="card-sub" id="goals-sub">Complete goals below!</div></div>
+        <div class="card"><div class="card-accent-bar" style="background:linear-gradient(90deg,var(--accent3),var(--red))"></div><div class="card-label">🧪 Tests Completed</div><div class="card-value" id="tests-taken">0</div><div class="card-sub" id="tests-sub">Take your first test!</div></div>
+      </div>
+      <div class="card" style="margin-bottom:1.5rem">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+          <div class="section-title" style="margin:0">🎯 Today's Goals</div>
+          <button class="btn-sm" onclick="resetGoals()">Reset Day</button>
+        </div>
+        <div id="daily-goals-list"></div>
+      </div>
+      <div class="grid-2">
+        <div class="card"><div class="card-label">📅 Streak History — Last 35 Days</div><div class="streak-grid" id="streak-grid"></div></div>
+        <div class="card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;">
+          <div class="card-label" style="text-align:center;margin-bottom:0.5rem;">🎯 Readiness Score</div>
+          <div class="readiness-number" id="readiness-score">0%</div>
+          <div class="card-sub" style="text-align:center;max-width:200px;margin-top:0.4rem">Based on tests + goal completion</div>
+          <div style="width:100%;height:4px;background:var(--surface2);border-radius:99px;margin-top:1rem;overflow:hidden;">
+            <div id="readiness-bar" style="height:100%;width:0%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:99px;transition:width 1.2s cubic-bezier(.4,0,.2,1);"></div>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:1.5rem"><div class="section-title">📈 Skill Progress</div><div id="skill-progress-bars"></div></div>
+      <div class="grid-2">
+        <div class="card chart-card"><div class="card-label">Weekly Activity (hours)</div><div class="chart-wrap"><canvas id="chart-activity"></canvas></div></div>
+        <div class="card chart-card"><div class="card-label">Skill Breakdown</div><div class="chart-wrap"><canvas id="chart-skill"></canvas></div></div>
+      </div>
+    </div>
+
+    <!-- TESTS -->
+    <div id="section-tests" class="section">
+      <div class="page-header"><h1>Practice Tests <span class="glow-text">🧠</span></h1><p>Sharpen your skills with curated quizzes.</p></div>
+      <div class="section-title">Coding</div>
+      <div class="test-card" id="test-dsa" onclick="startTest('DSA Fundamentals','coding','test-dsa')"><div class="test-icon" style="background:rgba(124,58,237,0.15)">💻</div><div class="test-info"><div class="t-title">DSA Fundamentals</div><div class="t-meta">5 questions · Arrays, Strings, Hashing</div><div class="t-score" id="score-test-dsa" style="display:none"></div></div><span class="badge badge-purple" id="badge-test-dsa">Start</span></div>
+      <div class="test-card" id="test-complexity" onclick="startTest('Time Complexity Quiz','coding','test-complexity')"><div class="test-icon" style="background:rgba(6,182,212,0.1)">⏱️</div><div class="test-info"><div class="t-title">Time Complexity Quiz</div><div class="t-meta">5 questions · Big-O Analysis</div><div class="t-score" id="score-test-complexity" style="display:none"></div></div><span class="badge badge-purple" id="badge-test-complexity">Start</span></div>
+      <div class="section-title">Aptitude</div>
+      <div class="test-card" id="test-quant" onclick="startTest('Quantitative Reasoning','aptitude','test-quant')"><div class="test-icon" style="background:rgba(245,158,11,0.1)">🔢</div><div class="test-info"><div class="t-title">Quantitative Reasoning</div><div class="t-meta">5 questions · Number Systems, Ratios</div><div class="t-score" id="score-test-quant" style="display:none"></div></div><span class="badge badge-purple" id="badge-test-quant">Start</span></div>
+      <div class="test-card" id="test-logical" onclick="startTest('Logical Reasoning','aptitude','test-logical')"><div class="test-icon" style="background:rgba(16,185,129,0.1)">🧩</div><div class="test-info"><div class="t-title">Logical Reasoning</div><div class="t-meta">5 questions · Patterns, Series</div><div class="t-score" id="score-test-logical" style="display:none"></div></div><span class="badge badge-purple" id="badge-test-logical">Start</span></div>
+      <div class="section-title">Core Subjects</div>
+      <div class="test-card" id="test-os" onclick="startTest('Operating Systems','core','test-os')"><div class="test-icon" style="background:rgba(124,58,237,0.15)">🖥️</div><div class="test-info"><div class="t-title">Operating Systems</div><div class="t-meta">5 questions · Processes, Scheduling</div><div class="t-score" id="score-test-os" style="display:none"></div></div><span class="badge badge-purple" id="badge-test-os">Start</span></div>
+      <div class="section-title">Soft Skills</div>
+      <div class="test-card" id="test-soft" onclick="startTest('Communication Skills','soft','test-soft')"><div class="test-icon" style="background:rgba(6,182,212,0.1)">🗣️</div><div class="test-info"><div class="t-title">Communication Skills</div><div class="t-meta">5 questions · Professional Communication</div><div class="t-score" id="score-test-soft" style="display:none"></div></div><span class="badge badge-purple" id="badge-test-soft">Start</span></div>
+    </div>
+
+    <!-- LEARN -->
+    <div id="section-learn" class="section">
+      <div class="page-header"><h1>Learn & Grow <span class="glow-text">📚</span></h1><p>Click any lesson to start reading. Progress saves automatically.</p></div>
+      <div class="section-title">📌 Recommended for You</div>
+      <div id="lessons-list"></div>
+    </div>
+
+    <!-- PROFILE -->
+    <div id="section-profile" class="section">
+      <div class="page-header"><h1>Your Profile <span class="glow-text">👤</span></h1></div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="section-title">Account Info</div>
+          <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;">
+            <div class="avatar" style="width:64px;height:64px;font-size:1.5rem;" id="profile-avatar">A</div>
+            <div><div style="font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:700;" id="profile-name">User</div><div style="color:var(--muted);font-size:0.85rem;" id="profile-email">user@email.com</div></div>
+          </div>
+          <div class="form-group"><label>Username</label><input type="text" id="profile-username-field" placeholder="Your username"/></div>
+          <button class="btn-primary" onclick="saveProfile()">Save Changes</button>
+        </div>
+        <div class="card">
+          <div class="section-title">Prep Goals</div>
+          <div id="profile-skills-display" style="color:var(--muted);font-size:0.9rem;margin-bottom:1rem;">No skills set yet.</div>
+          <button class="btn-primary" onclick="showGoalModal()" style="width:auto;padding:0.7rem 1.5rem;">✦ Update My Goals</button>
+        </div>
+      </div>
+      <div class="card" style="margin-top:0"><div class="section-title">🏆 Achievements</div><div style="display:flex;gap:1rem;flex-wrap:wrap;" id="achievements-list"></div></div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div id="section-settings" class="section">
+      <div class="page-header"><h1>Settings <span class="glow-text">⚙️</span></h1></div>
+      <div class="card" style="max-width:500px">
+        <div class="section-title">Daily Goal Target</div>
+        <div class="form-group"><label>Hours per day</label><input type="number" value="3" min="1" max="12" style="width:120px" id="daily-hours"/></div>
+        <button class="btn-primary" onclick="showToast('✅','Settings saved!')">Save Settings</button>
+        <div style="margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--border);">
+          <div class="section-title" style="color:var(--red)">Danger Zone</div>
+          <p style="color:var(--muted);font-size:0.85rem;margin-bottom:1rem;">Permanently delete all local progress data.</p>
+          <button class="btn-sm warn" onclick="clearAllData()">🗑️ Clear All My Data</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ════ ADMIN PAGE ════ -->
+<div id="page-admin" class="page app-page">
+  <aside class="sidebar">
+    <div class="sidebar-logo">✦ PrepFlow</div>
+    <div class="sidebar-user">
+      <div class="avatar" style="background:linear-gradient(135deg,var(--red),var(--accent3))">A</div>
+      <div class="sidebar-user-info"><div class="name">Admin</div><div class="role">Trainer</div></div>
+    </div>
+    <div class="nav-section-label">Admin Panel</div>
+    <div class="nav-item active" onclick="adminNav('overview',this)"><span class="icon">📊</span><span>Overview</span></div>
+    <div class="nav-item" onclick="adminNav('students',this)"><span class="icon">👥</span><span>Students</span></div>
+    <div class="nav-item" onclick="adminNav('inactive',this)"><span class="icon">⚠️</span><span>Inactive</span></div>
+    <div class="sidebar-bottom"><button class="btn-logout" onclick="logout()">Sign out</button></div>
+  </aside>
+  <main class="main-content">
+    <div id="admin-overview" class="section active">
+      <div class="page-header"><h1>Admin Dashboard <span class="glow-text">📊</span></h1><p>Monitor student engagement and prep progress.</p></div>
+      <div class="admin-kpi-row">
+        <div class="card"><div class="card-label">Total Students</div><div class="card-value">124</div></div>
+        <div class="card"><div class="card-label">Active Today</div><div class="card-value" style="color:var(--green)">89</div></div>
+        <div class="card"><div class="card-label">Inactive (7d)</div><div class="card-value" style="color:var(--red)">18</div></div>
+        <div class="card"><div class="card-label">Avg Readiness</div><div class="card-value" style="color:var(--neon)">67%</div></div>
+      </div>
+      <div class="grid-2">
+        <div class="card chart-card"><div class="card-label">Platform Activity (7 days)</div><div class="chart-wrap"><canvas id="admin-chart-activity"></canvas></div></div>
+        <div class="card chart-card"><div class="card-label">Readiness Distribution</div><div class="chart-wrap"><canvas id="admin-chart-readiness"></canvas></div></div>
+      </div>
+    </div>
+    <div id="admin-students" class="section">
+      <div class="page-header"><h1>All Students <span class="glow-text">👥</span></h1></div>
+      <div class="card table-wrap">
+        <table>
+          <thead><tr><th>Student</th><th>Streak</th><th>Tests</th><th>Readiness</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody>
+            <tr><td><b>Priya S.</b><br><small style="color:var(--muted)">priya@uni.edu</small></td><td>🔥 14</td><td>23</td><td>84%</td><td><span class="status-dot dot-green"></span>Active</td><td><button class="btn-sm">View</button></td></tr>
+            <tr><td><b>Rahul M.</b><br><small style="color:var(--muted)">rahul@uni.edu</small></td><td>🔥 7</td><td>11</td><td>61%</td><td><span class="status-dot dot-green"></span>Active</td><td><button class="btn-sm">View</button></td></tr>
+            <tr><td><b>Sneha K.</b><br><small style="color:var(--muted)">sneha@uni.edu</small></td><td>💤 0</td><td>4</td><td>31%</td><td><span class="status-dot dot-red"></span>Inactive</td><td><button class="btn-sm warn" onclick="sendNotif('Sneha K.')">Notify</button></td></tr>
+            <tr><td><b>Arjun T.</b><br><small style="color:var(--muted)">arjun@uni.edu</small></td><td>🔥 3</td><td>8</td><td>48%</td><td><span class="status-dot dot-yellow"></span>Low</td><td><button class="btn-sm">View</button></td></tr>
+            <tr><td><b>Divya R.</b><br><small style="color:var(--muted)">divya@uni.edu</small></td><td>💤 0</td><td>2</td><td>18%</td><td><span class="status-dot dot-red"></span>Inactive</td><td><button class="btn-sm warn" onclick="sendNotif('Divya R.')">Notify</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div id="admin-inactive" class="section">
+      <div class="page-header"><h1>Inactive Students <span class="glow-text">⚠️</span></h1><p>Students who haven't logged in for 7+ days.</p></div>
+      <div class="notif-banner">⚠️ 18 students have been inactive for over 7 days.</div>
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+          <div class="section-title" style="margin:0">Inactive List</div>
+          <button class="btn-primary" style="width:auto;padding:0.6rem 1.4rem;" onclick="notifyAll()">Notify All ⚡</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Student</th><th>Last Active</th><th>Streak Lost</th><th>Readiness</th><th>Action</th></tr></thead>
+            <tbody>
+              <tr><td><b>Sneha K.</b></td><td>12 days ago</td><td>Was 8 🔥</td><td>31%</td><td><button class="btn-sm warn" onclick="sendNotif('Sneha K.')">Send Nudge</button></td></tr>
+              <tr><td><b>Divya R.</b></td><td>9 days ago</td><td>Was 3 🔥</td><td>18%</td><td><button class="btn-sm warn" onclick="sendNotif('Divya R.')">Send Nudge</button></td></tr>
+              <tr><td><b>Karan P.</b></td><td>14 days ago</td><td>Was 15 🔥</td><td>55%</td><td><button class="btn-sm warn" onclick="sendNotif('Karan P.')">Send Nudge</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- GOAL MODAL -->
+<div id="goal-modal" class="modal-overlay hidden">
+  <div class="modal">
+    <h3>Set Your Prep Goals 🎯</h3>
+    <p class="modal-sub">Choose what you want to master.</p>
+    <div class="form-group"><label>Coding Platforms / Topics</label>
+      <div class="skill-tags" id="coding-tags">
+        <span class="skill-tag" onclick="toggleTag(this)">LeetCode</span><span class="skill-tag" onclick="toggleTag(this)">HackerRank</span><span class="skill-tag" onclick="toggleTag(this)">Arrays & Strings</span><span class="skill-tag" onclick="toggleTag(this)">Dynamic Programming</span><span class="skill-tag" onclick="toggleTag(this)">Trees & Graphs</span><span class="skill-tag" onclick="toggleTag(this)">Sorting & Searching</span>
+      </div>
+    </div>
+    <div class="form-group"><label>Aptitude Areas</label>
+      <div class="skill-tags" id="aptitude-tags">
+        <span class="skill-tag" onclick="toggleTag(this)">Quantitative</span><span class="skill-tag" onclick="toggleTag(this)">Logical Reasoning</span><span class="skill-tag" onclick="toggleTag(this)">Verbal Ability</span><span class="skill-tag" onclick="toggleTag(this)">Data Interpretation</span>
+      </div>
+    </div>
+    <div class="form-group"><label>Core Subjects</label>
+      <div class="skill-tags" id="core-tags">
+        <span class="skill-tag" onclick="toggleTag(this)">Operating Systems</span><span class="skill-tag" onclick="toggleTag(this)">DBMS</span><span class="skill-tag" onclick="toggleTag(this)">Computer Networks</span><span class="skill-tag" onclick="toggleTag(this)">OOP Concepts</span><span class="skill-tag" onclick="toggleTag(this)">System Design</span>
+      </div>
+    </div>
+    <div class="form-group"><label>Soft Skills</label>
+      <div class="skill-tags" id="soft-tags">
+        <span class="skill-tag" onclick="toggleTag(this)">Communication</span><span class="skill-tag" onclick="toggleTag(this)">Group Discussion</span><span class="skill-tag" onclick="toggleTag(this)">Resume Writing</span><span class="skill-tag" onclick="toggleTag(this)">Mock Interviews</span><span class="skill-tag" onclick="toggleTag(this)">Leadership</span>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-outline" onclick="closeModal('goal-modal')">Cancel</button>
+      <button class="btn-modal-primary" onclick="saveGoals()">Save Goals →</button>
+    </div>
+  </div>
+</div>
+
+<!-- QUIZ MODAL -->
+<div id="quiz-modal" class="modal-overlay hidden">
+  <div class="modal">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;">
+      <h3 id="quiz-title">Test</h3>
+      <div style="font-size:0.85rem;color:var(--muted)"><span id="quiz-q-num">1</span>/5</div>
+    </div>
+    <div style="height:3px;background:var(--surface2);border-radius:99px;margin-bottom:1.5rem;overflow:hidden;"><div id="quiz-bar" style="height:100%;width:20%;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width 0.3s;"></div></div>
+    <div class="quiz-q" id="quiz-question"></div>
+    <div id="quiz-options"></div>
+    <div id="quiz-feedback" style="margin-top:1rem;font-size:0.9rem;min-height:20px;"></div>
+    <div class="modal-actions" style="margin-top:1.2rem">
+      <button class="btn-outline" onclick="closeModal('quiz-modal')">Quit</button>
+      <button class="btn-modal-primary" id="quiz-next-btn" onclick="nextQuestion()" style="display:none">Next →</button>
+    </div>
+  </div>
+</div>
+
+<!-- LESSON MODAL -->
+<div id="lesson-modal" class="modal-overlay hidden">
+  <div class="modal" style="width:640px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;">
+      <h3 id="lesson-modal-title">Lesson</h3>
+      <button class="btn-outline" style="flex:none;width:auto;padding:0.4rem 1rem;" onclick="closeModal('lesson-modal')">✕</button>
+    </div>
+    <div class="lesson-content" id="lesson-modal-content"></div>
+    <div class="modal-actions" style="margin-top:2rem">
+      <button class="btn-outline" onclick="closeModal('lesson-modal')">Close</button>
+      <button class="btn-modal-primary" id="lesson-complete-btn" onclick="completeLesson()">Mark as Complete ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast" class="toast hidden">
+  <span class="toast-icon" id="toast-icon">✅</span>
+  <span class="toast-text" id="toast-text"></span>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+// BACKEND API CONFIG
+// Your backend runs at http://localhost:5000
+// Routes from auth.js mounted at /api:
+//   POST /api/register
+//   POST /api/login
+//   GET  /api/user/:id
+//   PUT  /api/user/:id
+// ══════════════════════════════════════════════════════
+const API = 'http://localhost:5000/api';
+
+// ══ localStorage HELPERS ══
+const LS_KEY = 'prepflow_state';
+const LS_TOKEN = 'prepflow_token';
+const LS_USERID = 'prepflow_userid';
+
+function saveState() {
+  try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch(e) {}
+}
+
+function loadLocalState(username) {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return null;
+    const s = JSON.parse(raw);
+    return (s.username && s.username.toLowerCase() === username.toLowerCase()) ? s : null;
+  } catch(e) { return null; }
+}
+
+function clearAllData() {
+  if (!confirm('Delete ALL your local progress permanently?')) return;
+  localStorage.removeItem(LS_KEY);
+  localStorage.removeItem(LS_TOKEN);
+  localStorage.removeItem(LS_USERID);
+  logout();
+  showToast('🗑️','All data cleared.');
+}
+
+// ══ DEFAULT STATE ══
+function defaultState() {
+  return {
+    username:'', email:'', userId:'', skills:[],
+    streak:0, readiness:0, testsCompleted:0,
+    testScores:{}, lessonProgress:{}, dailyGoals:[],
+    weeklyActivity:[0,0,0,0,0,0,0],
+    skillScores:{ coding:0, aptitude:0, core:0, soft:0 },
+    achievements:{ firstTest:false, streak3:false, goal5:false, ready50:false, lesson5:false }
+  };
+}
+
+let state = defaultState();
+
+// ══ CHECK SERVER HEALTH ══
+async function checkServer() {
+  const dots = ['reg-server-dot','login-server-dot'];
+  const texts = ['reg-server-text','login-server-text'];
+  try {
+    // Just ping the base URL — if it responds at all, server is up
+    await fetch(`${API}/login`, { method:'POST', headers:{'Content-Type':'application/json'}, body:'{}', signal: AbortSignal.timeout(3000) });
+    // Any response (even 400) means server is running
+    dots.forEach(id => { const el=document.getElementById(id); if(el){el.classList.add('up');el.classList.remove('down');} });
+    texts.forEach(id => { const el=document.getElementById(id); if(el) el.textContent='Server connected'; });
+  } catch(e) {
+    dots.forEach(id => { const el=document.getElementById(id); if(el){el.classList.add('down');el.classList.remove('up');} });
+    texts.forEach(id => { const el=document.getElementById(id); if(el) el.textContent='Server offline — check backend'; });
+  }
+}
+
+// ══ SHOW ERROR ══
+function showError(elId, msg) {
+  const el = document.getElementById(elId);
+  if (el) { el.textContent = msg; el.classList.add('show'); }
+}
+function clearError(elId) {
+  const el = document.getElementById(elId);
+  if (el) { el.textContent = ''; el.classList.remove('show'); }
+}
+
+// ══════════════════════════════════════════════════════
+// REGISTER — calls POST /api/register
+// ══════════════════════════════════════════════════════
+async function register() {
+  clearError('reg-error');
+  const u = document.getElementById('reg-username').value.trim();
+  const e = document.getElementById('reg-email').value.trim();
+  const p = document.getElementById('reg-pass').value.trim();
+
+  if (!u || !e || !p) { showError('reg-error','Please fill all fields.'); return; }
+
+  const btn = document.getElementById('reg-btn');
+  btn.disabled = true;
+  btn.textContent = 'Creating account...';
+
+  try {
+    const res = await fetch(`${API}/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: u, email: e, password: p })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      showError('reg-error', data.message || 'Registration failed. Try a different username/email.');
+      btn.disabled = false; btn.textContent = 'Create Account →';
+      return;
+    }
+
+    // Save token + userId
+    if (data.token) localStorage.setItem(LS_TOKEN, data.token);
+    const userId = data.user?._id || data._id || '';
+    if (userId) localStorage.setItem(LS_USERID, userId);
+
+    // Init fresh state
+    state = defaultState();
+    state.username = data.user?.username || u;
+    state.email = data.user?.email || e;
+    state.userId = userId;
+    initFreshUserData();
+
+    show('page-app');
+    renderAll();
+    setTimeout(() => showGoalModal(), 600);
+    showToast('🎉', `Welcome to PrepFlow, ${state.username}!`);
+
+  } catch(err) {
+    showError('reg-error', 'Cannot reach server. Make sure backend is running on port 5000.');
+    btn.disabled = false; btn.textContent = 'Create Account →';
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// LOGIN — calls POST /api/login
+// ══════════════════════════════════════════════════════
+async function login() {
+  clearError('login-error');
+  const u = document.getElementById('login-username').value.trim();
+  const e = document.getElementById('login-email').value.trim();
+  const p = document.getElementById('login-pass').value.trim();
+
+  if (!u || !e || !p) { showError('login-error','Please fill all fields.'); return; }
+
+  const btn = document.getElementById('login-btn');
+  btn.disabled = true;
+  btn.textContent = 'Signing in...';
+
+  try {
+    const res = await fetch(`${API}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: e, password: p })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      showError('login-error', data.message || 'Invalid email or password.');
+      btn.disabled = false; btn.textContent = 'Sign In →';
+      return;
+    }
+
+    // Save token + userId
+    if (data.token) localStorage.setItem(LS_TOKEN, data.token);
+    const userId = data.user?._id || data._id || '';
+    if (userId) localStorage.setItem(LS_USERID, userId);
+
+    // Try to restore saved progress from localStorage
+    const saved = loadLocalState(u);
+    if (saved) {
+      state = saved;
+      state.email = e;
+      state.userId = userId;
+      showToast('🎉', `Welcome back, ${state.username}! Progress restored ✦`);
+    } else {
+      // First login for this device — try to load from server
+      state = defaultState();
+      state.username = data.user?.username || u;
+      state.email = data.user?.email || e;
+      state.userId = userId;
+      initFreshUserData();
+
+      // Try to pull saved state from server if it was stored
+      await loadStateFromServer(userId);
+      showToast('👋', `Hi ${state.username}! Let's get to work.`);
+    }
+
+    show('page-app');
+    renderAll();
+
+  } catch(err) {
+    showError('login-error', 'Cannot reach server. Make sure backend is running on port 5000.');
+    btn.disabled = false; btn.textContent = 'Sign In →';
+  }
+}
+
+// ══ LOAD STATE FROM SERVER (GET /api/user/:id) ══
+async function loadStateFromServer(userId) {
+  if (!userId) return;
+  const token = localStorage.getItem(LS_TOKEN);
+  try {
+    const res = await fetch(`${API}/user/${userId}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!res.ok) return;
+    const user = await res.json();
+    // If user has appState saved in MongoDB, restore it
+    if (user.appState) {
+      const s = typeof user.appState === 'string' ? JSON.parse(user.appState) : user.appState;
+      // Merge server state with current state (keep username/email from server)
+      state = { ...defaultState(), ...s, username: user.username || state.username, email: user.email || state.email, userId: userId };
+      // Make sure lessonProgress and dailyGoals are initialized
+      LESSONS.forEach(l => { if (!state.lessonProgress[l.id]) state.lessonProgress[l.id] = { progress:0, done:false }; });
+      if (!state.dailyGoals || !state.dailyGoals.length) state.dailyGoals = GOAL_TEMPLATES.map(g => ({...g, done:false}));
+    }
+  } catch(e) {}
+}
+
+// ══ SAVE STATE TO SERVER (PUT /api/user/:id) ══
+async function saveStateToServer() {
+  const userId = state.userId || localStorage.getItem(LS_USERID);
+  const token = localStorage.getItem(LS_TOKEN);
+  if (!userId || !token) return;
+
+  try {
+    await fetch(`${API}/user/${userId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ appState: JSON.stringify(state) })
+    });
+  } catch(e) {}
+}
+
+// ══ COMBINED SAVE (localStorage + server) ══
+function saveAll() {
+  saveState();         // always save locally
+  saveStateToServer(); // also push to MongoDB
+}
+
+// ══ LOGOUT ══
+function logout() {
+  if (state.username) saveAll();
+  localStorage.removeItem(LS_TOKEN);
+  localStorage.removeItem(LS_USERID);
+  state = defaultState();
+  activityChart = null;
+  skillChart = null;
+  // Reset button states
+  const rb = document.getElementById('reg-btn'); if(rb){ rb.disabled=false; rb.textContent='Create Account →'; }
+  const lb = document.getElementById('login-btn'); if(lb){ lb.disabled=false; lb.textContent='Sign In →'; }
+  show('page-login');
+}
+
+// ══ AUTO-LOGIN on page load if token exists ══
+async function tryAutoLogin() {
+  const token = localStorage.getItem(LS_TOKEN);
+  const userId = localStorage.getItem(LS_USERID);
+  const saved = localStorage.getItem(LS_KEY);
+
+  if (token && userId && saved) {
+    try {
+      const s = JSON.parse(saved);
+      state = s;
+      state.userId = userId;
+      // Ensure all required fields exist
+      LESSONS.forEach(l => { if (!state.lessonProgress[l.id]) state.lessonProgress[l.id] = { progress:0, done:false }; });
+      if (!state.dailyGoals || !state.dailyGoals.length) state.dailyGoals = GOAL_TEMPLATES.map(g => ({...g, done:false}));
+      show('page-app');
+      renderAll();
+      showToast('✦', `Auto-signed in as ${state.username}`);
+    } catch(e) {}
+  }
+}
+
+// ══ GOAL TEMPLATES ══
+const GOAL_TEMPLATES = [
+  { id:'g1', text:'Complete 1 practice test', icon:'🧪', category:'test' },
+  { id:'g2', text:'Read a lesson for 10 mins', icon:'📖', category:'lesson' },
+  { id:'g3', text:'Solve 5 coding problems', icon:'💻', category:'code' },
+  { id:'g4', text:'Practice aptitude questions', icon:'🔢', category:'aptitude' },
+  { id:'g5', text:"Review yesterday's mistakes", icon:'🔁', category:'review' },
+];
+
+// ══ LESSONS ══
+const LESSONS = [
+  { id:'l1', emoji:'🔗', title:'Linked Lists — From Zero to Hero', desc:'Master single & doubly linked lists with visual examples.', content:`<h4>What is a Linked List?</h4>A linked list is a linear data structure where elements (nodes) are stored in non-contiguous memory locations and linked using pointers.<h4>Types</h4><b>Singly Linked List:</b> Each node points to the next node only.<br><b>Doubly Linked List:</b> Each node has pointers to both next and previous nodes.<h4>Key Operations</h4>• <code>Insert at head</code> — O(1)<br>• <code>Insert at tail</code> — O(n) for singly, O(1) for doubly with tail pointer<br>• <code>Delete a node</code> — O(n) to find, O(1) to remove<br>• <code>Search</code> — O(n)<h4>When to use?</h4>Use linked lists when you have frequent insertions/deletions and don't need random access.` },
+  { id:'l2', emoji:'📊', title:'Graphs & BFS/DFS', desc:'Understand graph traversals with step-by-step walkthroughs.', content:`<h4>Graph Basics</h4>A graph is a collection of vertices (nodes) connected by edges.<h4>BFS — Breadth First Search</h4>Uses a <code>queue</code>. Explores level by level. Time: O(V+E). Best for shortest path in unweighted graphs.<h4>DFS — Depth First Search</h4>Uses a <code>stack</code> (or recursion). Explores as deep as possible. Time: O(V+E). Best for topological sort, cycle detection.<h4>Common Interview Questions</h4>• Number of islands<br>• Shortest path (BFS)<br>• Course schedule (topological sort)` },
+  { id:'l3', emoji:'🧮', title:'Probability & Permutations', desc:'Crack aptitude questions on P&C with solved examples.', content:`<h4>Permutations</h4>Arrangement of r items from n: <code>P(n,r) = n! / (n-r)!</code><h4>Combinations</h4>Selection of r items from n: <code>C(n,r) = n! / (r! × (n-r)!)</code><h4>Probability</h4><code>P(event) = favorable / total</code><br>P(A and B) = P(A) × P(B) for independent events.<h4>Quick Tips</h4>• Is order important? → Permutation vs Combination<br>• Complement: P(event) = 1 - P(not event)` },
+  { id:'l4', emoji:'💬', title:'STAR Method for Interviews', desc:'Structure behavioral answers using the STAR framework.', content:`<h4>What is STAR?</h4>STAR = <b>Situation, Task, Action, Result</b>. Gold standard for behavioral questions.<h4>S — Situation</h4>Set context briefly (1-2 sentences).<h4>T — Task</h4>What was your responsibility?<h4>A — Action</h4>What did YOU specifically do? Use "I" not "we".<h4>R — Result</h4>What was the outcome? Quantify it. "Reduced load time by 40%".<h4>Practice Questions</h4>• Describe a time you solved a difficult problem<br>• Tell me about a conflict with a teammate` },
+  { id:'l5', emoji:'⚙️', title:'OS: Memory Management', desc:'Paging, segmentation, virtual memory explained clearly.', content:`<h4>Why Memory Management?</h4>OS must allocate memory to processes efficiently and safely.<h4>Paging</h4>Fixed-size <b>frames</b> and process <b>pages</b>. No external fragmentation. Page table maps logical → physical.<h4>Segmentation</h4>Logical segments (code, stack, heap). Variable sizes. Can have external fragmentation.<h4>Virtual Memory</h4>Processes can use more memory than available. Pages loaded on demand. Page faults occur when page isn't in RAM.<h4>Key Terms</h4>• <code>TLB</code> — Translation Lookaside Buffer<br>• <code>Thrashing</code> — Excessive page faults<br>• <code>Working Set</code> — Active pages` },
+];
+
+// ══ QUIZ DATA ══
+const quizData = {
+  coding:[
+    {q:"What is the time complexity of binary search?",opts:["O(n)","O(log n)","O(n²)","O(1)"],ans:1},
+    {q:"Which data structure uses LIFO ordering?",opts:["Queue","Stack","Linked List","Tree"],ans:1},
+    {q:"What does 'memoization' refer to?",opts:["Compressing data","Caching subproblem results","Sorting an array","Memory allocation"],ans:1},
+    {q:"Dijkstra's algorithm finds:",opts:["Minimum spanning tree","Shortest path","Maximum flow","Longest path"],ans:1},
+    {q:"Which of these has O(1) average insert/lookup?",opts:["Binary tree","Sorted array","Hash table","Linked list"],ans:2},
+  ],
+  aptitude:[
+    {q:"If 5 apples cost ₹30, cost of 8 apples?",opts:["₹40","₹48","₹50","₹56"],ans:1},
+    {q:"Next number? 2, 6, 12, 20, __",opts:["28","30","32","36"],ans:1},
+    {q:"Train travels 60km in 1.5hrs. Speed (km/h)?",opts:["30","40","45","50"],ans:1},
+    {q:"25% of 200 is?",opts:["25","50","75","100"],ans:1},
+    {q:"If A=2, B=3, what is A+B×A?",opts:["10","8","6","5"],ans:1},
+  ],
+  core:[
+    {q:"Which OS scheduling is non-preemptive?",opts:["Round Robin","FCFS","Priority (preemptive)","SJF (preemptive)"],ans:1},
+    {q:"SQL JOIN returns rows from:",opts:["Only left table","Only right table","Both tables based on condition","Neither"],ans:2},
+    {q:"OSI model has how many layers?",opts:["4","5","7","9"],ans:2},
+    {q:"OOP concept of hiding internal details:",opts:["Inheritance","Polymorphism","Encapsulation","Abstraction"],ans:2},
+    {q:"ACID stands for:",opts:["Atomic Consistent Isolated Durable","Active Closed Indexed Dynamic","All Columns Indexed Directly","None"],ans:0},
+  ],
+  soft:[
+    {q:"STAR method stands for:",opts:["Situation Task Action Result","Simple Talking And Reading","Study Task Apply Repeat","None"],ans:0},
+    {q:"Best way to start a GD?",opts:["Wait for others","Give a firm definition of the topic","Talk loudly","Interrupt frequently"],ans:1},
+    {q:"Active listening means:",opts:["Thinking of your reply","Fully concentrating on the speaker","Nodding without processing","Multitasking"],ans:1},
+    {q:"A resume should ideally be:",opts:["5 pages","As long as needed","1-2 pages for freshers","No rule"],ans:2},
+    {q:"In a mock interview, silence means:",opts:["Failure","Taking time to think is okay","Interviewer is bored","You must guess"],ans:1},
+  ]
+};
+
+let currentQuiz = {questions:[],current:0,score:0,type:'',title:'',testId:''};
+let currentLessonId = null;
+let activityChart = null;
+let skillChart = null;
+
+// ══ PAGE ROUTING ══
+function show(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function showAdmin() { show('page-admin'); initAdminCharts(); }
+
+// ══ INIT FRESH USER DATA ══
+function initFreshUserData() {
+  state.dailyGoals = GOAL_TEMPLATES.map(g => ({...g, done:false}));
+  state.weeklyActivity = [0,0,0,0,0,0,0];
+  state.skillScores = {coding:0,aptitude:0,core:0,soft:0};
+  state.lessonProgress = {};
+  LESSONS.forEach(l => { state.lessonProgress[l.id] = {progress:0,done:false}; });
+}
+
+// ══ RENDER ALL ══
+function renderAll() {
+  LESSONS.forEach(l => { if (!state.lessonProgress[l.id]) state.lessonProgress[l.id] = {progress:0,done:false}; });
+  if (!state.dailyGoals || !state.dailyGoals.length) state.dailyGoals = GOAL_TEMPLATES.map(g => ({...g,done:false}));
+  updateUserInfo();
+  renderDashboard();
+  restoreTestUI();
+  restoreSkillTags();
+}
+
+function updateUserInfo() {
+  const n = state.username || 'User';
+  const letter = n.charAt(0).toUpperCase();
+  document.getElementById('sidebar-name').textContent = n;
+  document.getElementById('sidebar-avatar').textContent = letter;
+  document.getElementById('profile-avatar').textContent = letter;
+  document.getElementById('profile-name').textContent = n;
+  document.getElementById('profile-email').textContent = state.email;
+  document.getElementById('profile-username-field').value = n;
+  const display = document.getElementById('profile-skills-display');
+  if (state.skills && state.skills.length) {
+    display.innerHTML = state.skills.map(s => `<span class="badge badge-purple" style="display:inline-block;margin:3px;">${s}</span>`).join('');
+  } else {
+    display.textContent = 'No skills set yet.';
+  }
+}
+
+function restoreTestUI() {
+  Object.entries(state.testScores || {}).forEach(([testId, data]) => {
+    const badge = document.getElementById('badge-'+testId);
+    const scoreEl = document.getElementById('score-'+testId);
+    const card = document.getElementById(testId);
+    if (badge) { badge.textContent=`${data.pct}%`; badge.className=data.pct>=60?'badge badge-green':'badge badge-yellow'; }
+    if (scoreEl) { scoreEl.textContent=`Last score: ${data.score}/${data.total} (${data.pct}%)`; scoreEl.style.display='block'; }
+    if (card) card.classList.add('test-done');
+  });
+}
+
+function restoreSkillTags() {
+  if (!state.skills || !state.skills.length) return;
+  document.querySelectorAll('.skill-tag').forEach(tag => {
+    if (state.skills.includes(tag.textContent)) tag.classList.add('selected');
+  });
+}
+
+// ══ DASHBOARD ══
+function renderDashboard() {
+  updateStatCards();
+  buildStreak();
+  buildSkillBars();
+  renderDailyGoals();
+  renderLessons();
+  renderAchievements();
+  initCharts();
+}
+
+function updateStatCards() {
+  const total = state.dailyGoals.length;
+  const done = state.dailyGoals.filter(g => g.done).length;
+  document.getElementById('streak-count').textContent = state.streak;
+  document.getElementById('goals-done').textContent = `${done}/${total}`;
+  document.getElementById('tests-taken').textContent = state.testsCompleted;
+  const subs = ['Complete goals below!','Keep going!','Great start! 💪','Halfway there!','Almost done! 🔥','All done! You crushed it! 🎉'];
+  document.getElementById('goals-sub').textContent = subs[Math.min(done, subs.length-1)];
+  document.getElementById('tests-sub').textContent = state.testsCompleted===0 ? 'Take your first test!' : `+${state.testsCompleted*5}% readiness boost`;
+  const scores = Object.values(state.skillScores);
+  const avg = scores.length ? Math.round(scores.reduce((a,b)=>a+b,0)/scores.length) : 0;
+  const goalBonus = Math.round((done/total)*15);
+  state.readiness = Math.min(avg+goalBonus, 99);
+  document.getElementById('readiness-score').textContent = state.readiness+'%';
+  document.getElementById('readiness-bar').style.width = state.readiness+'%';
+}
+
+function renderDailyGoals() {
+  document.getElementById('daily-goals-list').innerHTML = state.dailyGoals.map(g => `
+    <div class="goal-item ${g.done?'completed':''}" onclick="toggleGoal('${g.id}')">
+      <div class="goal-check">${g.done?'✓':''}</div>
+      <div><div class="goal-text">${g.icon} ${g.text}</div></div>
+    </div>`).join('');
+}
+
+function toggleGoal(id) {
+  const g = state.dailyGoals.find(g => g.id===id);
+  if (!g) return;
+  g.done = !g.done;
+  if (g.done) {
+    state.streak = Math.max(state.streak, 1);
+    updateWeeklyActivity(0.5);
+    if (state.dailyGoals.every(g=>g.done)) { state.streak++; buildStreak(); showToast('🎉','All goals done! Streak updated!'); checkAchievement('goal5'); }
+    else showToast('✅','Goal completed!');
+  }
+  renderDailyGoals(); updateStatCards(); checkAchievements(); saveAll();
+}
+
+function resetGoals() {
+  state.dailyGoals.forEach(g => g.done=false);
+  renderDailyGoals(); updateStatCards(); saveAll(); showToast('🔄','Goals reset for today!');
+}
+
+function buildStreak() {
+  const grid = document.getElementById('streak-grid');
+  grid.innerHTML = '';
+  for (let i=0;i<35;i++) {
+    const d = document.createElement('div');
+    d.className = 'streak-day';
+    const daysAgo = 34-i;
+    if (daysAgo===0) d.classList.add('today');
+    else if (daysAgo<=state.streak) d.classList.add('done');
+    grid.appendChild(d);
+  }
+}
+
+function buildSkillBars() {
+  const bars = [
+    {name:'Coding (DSA)',pct:state.skillScores.coding,color:'linear-gradient(90deg,#7c3aed,#a78bfa)'},
+    {name:'Aptitude',pct:state.skillScores.aptitude,color:'linear-gradient(90deg,#06b6d4,#10b981)'},
+    {name:'Core Subjects',pct:state.skillScores.core,color:'linear-gradient(90deg,#f59e0b,#ef4444)'},
+    {name:'Soft Skills',pct:state.skillScores.soft,color:'linear-gradient(90deg,#10b981,#06b6d4)'},
+  ];
+  document.getElementById('skill-progress-bars').innerHTML = bars.map(s => `
+    <div class="skill-row">
+      <div class="skill-label"><span>${s.name}</span><span>${s.pct}%</span></div>
+      <div class="skill-bar"><div class="skill-fill" style="width:${s.pct}%;background:${s.color}"></div></div>
+    </div>`).join('');
+}
+
+function initCharts() {
+  const opts = { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{ticks:{color:'#7c7ca0',font:{family:'DM Sans',size:11}},grid:{color:'rgba(255,255,255,0.04)'}},y:{ticks:{color:'#7c7ca0',font:{family:'DM Sans',size:11}},grid:{color:'rgba(255,255,255,0.04)'},min:0}} };
+  if (activityChart) activityChart.destroy();
+  activityChart = new Chart(document.getElementById('chart-activity'), { type:'bar', data:{ labels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'], datasets:[{data:state.weeklyActivity,backgroundColor:'rgba(124,58,237,0.5)',borderRadius:8,borderSkipped:false}] }, options:opts });
+  if (skillChart) skillChart.destroy();
+  const scores = [state.skillScores.coding,state.skillScores.aptitude,state.skillScores.core,state.skillScores.soft];
+  const hasData = scores.some(s=>s>0);
+  skillChart = new Chart(document.getElementById('chart-skill'), { type:'doughnut', data:{ labels:['Coding','Aptitude','Core','Soft Skills'], datasets:[{data:hasData?scores:[25,25,25,25],backgroundColor:['rgba(124,58,237,0.8)','rgba(6,182,212,0.8)','rgba(245,158,11,0.8)','rgba(16,185,129,0.8)'],borderColor:'#12121a',borderWidth:3}] }, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#7c7ca0',font:{family:'DM Sans'},padding:12}}},cutout:'65%'} });
+}
+
+function updateCharts() {
+  if (activityChart) { activityChart.data.datasets[0].data=state.weeklyActivity; activityChart.update(); }
+  if (skillChart) { const scores=[state.skillScores.coding,state.skillScores.aptitude,state.skillScores.core,state.skillScores.soft]; skillChart.data.datasets[0].data=scores.some(s=>s>0)?scores:[25,25,25,25]; skillChart.update(); }
+}
+
+function updateWeeklyActivity(hours) {
+  const day = new Date().getDay();
+  const idx = day===0?6:day-1;
+  state.weeklyActivity[idx] = Math.round((state.weeklyActivity[idx]+hours)*10)/10;
+  updateCharts();
+}
+
+// ══ LESSONS ══
+function renderLessons() {
+  document.getElementById('lessons-list').innerHTML = LESSONS.map(l => {
+    const prog = state.lessonProgress[l.id]||{progress:0,done:false};
+    return `<div class="lesson-card ${prog.done?'lesson-done':''}" onclick="openLesson('${l.id}')">
+      ${prog.done?'<span class="lesson-status badge-green" style="background:rgba(16,185,129,0.15);color:var(--green)">✓ Done</span>':''}
+      <div class="lesson-header"><span class="lesson-emoji">${l.emoji}</span><span class="lesson-title">${l.title}</span></div>
+      <div class="lesson-desc">${l.desc}</div>
+      <div class="progress-mini"><div class="progress-mini-fill" style="width:${prog.progress}%"></div></div>
+    </div>`;
+  }).join('');
+}
+
+function openLesson(id) {
+  const lesson = LESSONS.find(l=>l.id===id);
+  if (!lesson) return;
+  currentLessonId = id;
+  document.getElementById('lesson-modal-title').textContent = lesson.emoji+' '+lesson.title;
+  document.getElementById('lesson-modal-content').innerHTML = lesson.content;
+  const prog = state.lessonProgress[id];
+  const btn = document.getElementById('lesson-complete-btn');
+  if (prog.done) { btn.textContent='✓ Already Completed'; btn.style.opacity='0.5'; btn.style.pointerEvents='none'; }
+  else { btn.textContent='Mark as Complete ✓'; btn.style.opacity='1'; btn.style.pointerEvents='auto'; }
+  if (!prog.done && prog.progress<50) { prog.progress=50; saveAll(); renderLessons(); }
+  document.getElementById('lesson-modal').classList.remove('hidden');
+}
+
+function completeLesson() {
+  if (!currentLessonId) return;
+  const prog = state.lessonProgress[currentLessonId];
+  if (prog.done) return;
+  prog.done=true; prog.progress=100;
+  state.skillScores.coding = Math.min(state.skillScores.coding+8,100);
+  state.skillScores.soft = Math.min(state.skillScores.soft+5,100);
+  updateWeeklyActivity(0.5);
+  updateStatCards(); buildSkillBars(); updateCharts(); renderLessons(); renderAchievements();
+  const lg = state.dailyGoals.find(g=>g.category==='lesson');
+  if (lg && !lg.done) { lg.done=true; renderDailyGoals(); updateStatCards(); }
+  const doneCount = Object.values(state.lessonProgress).filter(p=>p.done).length;
+  if (doneCount>=3) checkAchievement('lesson5');
+  closeModal('lesson-modal');
+  saveAll();
+  showToast('📚','Lesson completed! Skills updated!');
+  checkAchievements();
+}
+
+// ══ TESTS ══
+function startTest(title,type,testId) {
+  currentQuiz = {questions:quizData[type],current:0,score:0,type,title,testId};
+  document.getElementById('quiz-title').textContent = title;
+  document.getElementById('quiz-modal').classList.remove('hidden');
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const q = currentQuiz.questions[currentQuiz.current];
+  const total = currentQuiz.questions.length;
+  document.getElementById('quiz-q-num').textContent = currentQuiz.current+1;
+  document.getElementById('quiz-bar').style.width = ((currentQuiz.current+1)/total*100)+'%';
+  document.getElementById('quiz-question').textContent = q.q;
+  document.getElementById('quiz-feedback').textContent = '';
+  document.getElementById('quiz-next-btn').style.display = 'none';
+  document.getElementById('quiz-options').innerHTML = q.opts.map((o,i)=>`<div class="quiz-option" onclick="selectOption(this,${i})">${o}</div>`).join('');
+}
+
+function selectOption(el,idx) {
+  const q = currentQuiz.questions[currentQuiz.current];
+  document.querySelectorAll('.quiz-option').forEach(o=>o.style.pointerEvents='none');
+  const feedback = document.getElementById('quiz-feedback');
+  if (idx===q.ans) { el.classList.add('correct'); currentQuiz.score++; feedback.style.color='var(--green)'; feedback.textContent='✓ Correct!'; }
+  else { el.classList.add('wrong'); document.querySelectorAll('.quiz-option')[q.ans].classList.add('correct'); feedback.style.color='var(--red)'; feedback.textContent='✗ Incorrect. Correct answer highlighted.'; }
+  if (currentQuiz.current < currentQuiz.questions.length-1) document.getElementById('quiz-next-btn').style.display='block';
+  else setTimeout(()=>finishTest(),1200);
+}
+
+function nextQuestion() { currentQuiz.current++; renderQuestion(); }
+
+function finishTest() {
+  const {score,questions,type,testId,title} = currentQuiz;
+  const total = questions.length;
+  const pct = Math.round(score/total*100);
+  state.testScores[testId] = {score,total,pct};
+  state.testsCompleted++;
+  const prev = state.skillScores[type]||0;
+  state.skillScores[type] = Math.min(Math.round(prev*0.6+pct*0.4),100);
+  state.streak = Math.max(state.streak,1);
+  updateWeeklyActivity(0.4);
+  const badge=document.getElementById('badge-'+testId);
+  const scoreEl=document.getElementById('score-'+testId);
+  const card=document.getElementById(testId);
+  if (badge) { badge.textContent=`${pct}%`; badge.className=pct>=60?'badge badge-green':'badge badge-yellow'; }
+  if (scoreEl) { scoreEl.textContent=`Last score: ${score}/${total} (${pct}%)`; scoreEl.style.display='block'; }
+  if (card) card.classList.add('test-done');
+  const tg = state.dailyGoals.find(g=>g.category==='test'&&!g.done);
+  if (tg) { tg.done=true; renderDailyGoals(); }
+  updateStatCards(); buildSkillBars(); buildStreak(); updateCharts(); checkAchievements();
+  closeModal('quiz-modal');
+  saveAll();
+  showToast('🎉',`${title}: ${score}/${total} (${pct}%) — Dashboard updated!`);
+  checkAchievement('firstTest');
+  if (state.streak>=3) checkAchievement('streak3');
+  if (state.readiness>=50) checkAchievement('ready50');
+}
+
+// ══ ACHIEVEMENTS ══
+const ACHIEVEMENT_DEFS = [
+  {id:'firstTest',emoji:'🥇',label:'First Test'},
+  {id:'streak3',emoji:'🔥',label:'3-Day Streak'},
+  {id:'goal5',emoji:'✅',label:'All Goals Done'},
+  {id:'ready50',emoji:'🚀',label:'50% Ready'},
+  {id:'lesson5',emoji:'💡',label:'3 Lessons'},
+];
+
+function renderAchievements() {
+  document.getElementById('achievements-list').innerHTML = ACHIEVEMENT_DEFS.map(a=>`
+    <div class="achievement ${state.achievements[a.id]?'unlocked':'locked'}" id="ach-${a.id}">
+      <div style="font-size:2rem">${a.emoji}</div>
+      <div style="font-size:0.75rem;margin-top:0.3rem;color:var(--muted)">${a.label}</div>
+    </div>`).join('');
+}
+
+function checkAchievement(id) {
+  if (state.achievements[id]) return;
+  state.achievements[id]=true;
+  renderAchievements();
+  const el=document.getElementById('ach-'+id);
+  if (el) el.classList.add('achievement-pop');
+  const def=ACHIEVEMENT_DEFS.find(a=>a.id===id);
+  if (def) showToast('🏆',`Achievement unlocked: ${def.label}!`);
+  saveAll();
+}
+
+function checkAchievements() {
+  if (state.testsCompleted>0) checkAchievement('firstTest');
+  if (state.streak>=3) checkAchievement('streak3');
+  if (state.dailyGoals.every(g=>g.done)) checkAchievement('goal5');
+  if (state.readiness>=50) checkAchievement('ready50');
+  if (Object.values(state.lessonProgress).filter(p=>p.done).length>=3) checkAchievement('lesson5');
+}
+
+// ══ GOAL MODAL ══
+function showGoalModal() { document.getElementById('goal-modal').classList.remove('hidden'); }
+function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+function toggleTag(el) { el.classList.toggle('selected'); }
+
+function saveGoals() {
+  const selected = Array.from(document.querySelectorAll('.skill-tag.selected')).map(t=>t.textContent);
+  state.skills = selected;
+  const display = document.getElementById('profile-skills-display');
+  display.innerHTML = selected.length ? selected.map(s=>`<span class="badge badge-purple" style="display:inline-block;margin:3px;">${s}</span>`).join('') : 'No skills set yet.';
+  closeModal('goal-modal');
+  saveAll();
+  showToast('🎯','Goals saved!');
+}
+
+// ══ PROFILE ══
+function saveProfile() {
+  const u = document.getElementById('profile-username-field').value;
+  state.username = u;
+  updateUserInfo();
+  saveAll();
+  showToast('✅','Profile saved!');
+}
+
+// ══ NAV ══
+function navTo(sec,el) {
+  document.querySelectorAll('#page-app .nav-item').forEach(n=>n.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('#page-app .section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('section-'+sec).classList.add('active');
+}
+
+function adminNav(sec,el) {
+  document.querySelectorAll('#page-admin .nav-item').forEach(n=>n.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('#page-admin .section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('admin-'+sec).classList.add('active');
+}
+
+// ══ ADMIN CHARTS ══
+let adminChartsInit = false;
+function initAdminCharts() {
+  if (adminChartsInit) return;
+  adminChartsInit = true;
+  const co = {responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#7c7ca0',font:{family:'DM Sans',size:11}},grid:{color:'rgba(255,255,255,0.04)'}},y:{ticks:{color:'#7c7ca0',font:{family:'DM Sans',size:11}},grid:{color:'rgba(255,255,255,0.04)'}}}};
+  new Chart(document.getElementById('admin-chart-activity'),{type:'line',data:{labels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],datasets:[{data:[78,85,92,70,88,60,89],borderColor:'#7c3aed',backgroundColor:'rgba(124,58,237,0.1)',tension:0.4,fill:true,pointBackgroundColor:'#a78bfa'}]},options:co});
+  new Chart(document.getElementById('admin-chart-readiness'),{type:'bar',data:{labels:['0-20%','20-40%','40-60%','60-80%','80-100%'],datasets:[{data:[8,18,35,42,21],backgroundColor:['#ef4444','#f59e0b','#6366f1','#06b6d4','#10b981'],borderRadius:8}]},options:co});
+}
+
+function sendNotif(name) { showToast('📨',`Notification sent to ${name}!`); }
+function notifyAll() { showToast('📢','Nudge sent to all inactive students!'); }
+
+// ══ TOAST ══
+function showToast(icon,text) {
+  const t=document.getElementById('toast');
+  document.getElementById('toast-icon').textContent=icon;
+  document.getElementById('toast-text').textContent=text;
+  t.classList.remove('hidden');
+  clearTimeout(window._toastTimer);
+  window._toastTimer=setTimeout(()=>t.classList.add('hidden'),3500);
+}
+
+// ══ AUTO-SAVE on tab close ══
+window.addEventListener('beforeunload',()=>{ if(state.username) saveAll(); });
+
+// ══ STARTUP ══
+checkServer();
+tryAutoLogin();
+</script>
+</body>
+</html>
